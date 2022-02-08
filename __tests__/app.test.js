@@ -2,6 +2,7 @@ const pool = require('../lib/utils/pool');
 const setup = require('../data/setup');
 const request = require('supertest');
 const app = require('../lib/app');
+const UserService = require('../lib/services/userServices');
 
 //need to import UserService
 //need to create dummy user
@@ -16,7 +17,7 @@ const regiAndLogin = async (userProps = {}) => {
   const pass = userProps.password ?? mockUser.password;
   //from UserServices, we will create the mockuser and userprops, deconstruct it and spread it
   const agent = request.agent(app);
-  const user = await UserServices.create({ ...mockUser, ...userProps });
+  const user = await UserService.create({ ...mockUser, ...userProps });
 
   //we deconstructed the email off of our mockUser and userProps, now we will pass it in the agent and get the email and pass
   const { email } = user;
@@ -37,7 +38,7 @@ describe('backend routes', () => {
     const response = await request(app).post('/api/v1/users').send(mockUser);
     const { email } = mockUser;
 
-    expect(res.body).toEqual({
+    expect(response.body).toEqual({
       id: expect.any(String),
       email,
     });
