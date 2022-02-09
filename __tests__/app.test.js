@@ -14,14 +14,14 @@ const mockUser = {
 // we set userProps to be an empty object becayse that is what we expect to see 
 const regiAndLogin = async (userProps = {}) => {
   //then we are saying return the mockUser when the userProps is null
-  const pass = userProps.password ?? mockUser.password;
+  const password = userProps.password ?? mockUser.password;
   //from UserServices, we will create the mockuser and userprops, deconstruct it and spread it
   const agent = request.agent(app);
   const user = await UserService.create({ ...mockUser, ...userProps });
 
   //we deconstructed the email off of our mockUser and userProps, now we will pass it in the agent and get the email and pass
   const { email } = user;
-  await (await agent.post('/api/v1/sessions')).setEncoding({ email, pass });
+  await agent.post('/api/v1/sessions').send({ email, password });
   return [agent, user];
 };
 
