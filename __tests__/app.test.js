@@ -43,13 +43,14 @@ describe('backend routes', () => {
       email,
     });
   });
-
-  it('logs in a user', async () => {
-    const [agent, user] = await regiAndLogin();
-    const sessions = await agent.get('/api/v1/users/sessions');
+  //login user 
+  it.only('logs in a user', async () => {
+    //pop out the agent
+    const [agent] = await regiAndLogin();
+    const sessions = await agent.post('/api/v1/users/sessions').send(mockUser);
 
     expect(sessions.body).toEqual({
-      ...user
+      message: 'Signed in!'
     });
   });
 
