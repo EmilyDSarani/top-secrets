@@ -44,7 +44,7 @@ describe('backend routes', () => {
     });
   });
   //login user 
-  it.only('logs in a user', async () => {
+  it('logs in a user', async () => {
     //pop out the agent
     const [agent] = await regiAndLogin();
     const sessions = await agent.post('/api/v1/users/sessions').send(mockUser);
