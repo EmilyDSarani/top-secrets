@@ -11,19 +11,19 @@ const mockUser = {
   email: 'this@email.com',
   password: 'iswhack1234'
 };
-//we set userProps to be an empty object becayse that is what we expect to see 
-// const regiAndLogin = async (userProps = {}) => {
-//   //then we are saying return the mockUser when the userProps is null
-//   const pass = userProps.password ?? mockUser.password;
-//   //from UserServices, we will create the mockuser and userprops, deconstruct it and spread it
-//   const agent = request.agent(app);
-//   const user = await UserService.create({ ...mockUser, ...userProps });
+// we set userProps to be an empty object becayse that is what we expect to see 
+const regiAndLogin = async (userProps = {}) => {
+  //then we are saying return the mockUser when the userProps is null
+  const pass = userProps.password ?? mockUser.password;
+  //from UserServices, we will create the mockuser and userprops, deconstruct it and spread it
+  const agent = request.agent(app);
+  const user = await UserService.create({ ...mockUser, ...userProps });
 
-//   //we deconstructed the email off of our mockUser and userProps, now we will pass it in the agent and get the email and pass
-//   const { email } = user;
-//   await (await agent.post('/api/v1/sessions')).setEncoding({ email, pass });
-//   return [agent, user];
-// };
+  //we deconstructed the email off of our mockUser and userProps, now we will pass it in the agent and get the email and pass
+  const { email } = user;
+  await (await agent.post('/api/v1/sessions')).setEncoding({ email, pass });
+  return [agent, user];
+};
 
 describe('backend routes', () => {
   beforeEach(() => {
@@ -41,6 +41,15 @@ describe('backend routes', () => {
     expect(response.body).toEqual({
       id: expect.any(String),
       email,
+    });
+  });
+
+  it('logs in a user', async () => {
+    const [agent, user] = await regiAndLogin();
+    const sessions = await agent.get('/api/v1/users/sessions');
+
+    expect(sessions.body).toEqual({
+      ...user
     });
   });
 
