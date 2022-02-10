@@ -11,6 +11,11 @@ const mockUser = {
   email: 'this@email.com',
   password: 'iswhack1234'
 };
+const falseSecret = {
+  title: 'Great Question of Life, the Universe and Everything ',
+  description: 'Forty-Two',
+  createdAt: '1200'
+};
 // we set userProps to be an empty object becayse that is what we expect to see 
 const regiAndLogin = async (userProps = {}) => {
   //then we are saying return the mockUser when the userProps is null
@@ -21,7 +26,7 @@ const regiAndLogin = async (userProps = {}) => {
 
   //we deconstructed the email off of our mockUser and userProps, now we will pass it in the agent and get the email and pass
   const { email } = user;
-  await agent.post('/api/v1/sessions').send({ email, password });
+  await agent.post('/api/v1/users/sessions').send({ email, password });
   return [agent, user];
 };
 
@@ -51,6 +56,27 @@ describe('backend routes', () => {
 
     expect(sessions.body).toEqual({
       message: 'Signed in!'
+    });
+  });
+
+  it('gets secrets for logged in user', async () => {
+    const [agent, user] = await regiAndLogin();
+    const secret = await agent.get('/api/v1/users/secrets');
+    expect(secret.body).toEqual(
+      {
+        ...user,
+        // id: user.id,
+        // email: user.email,
+        exp: expect.any(Number),
+        iat: expect.any(Number),
+      }
+    );
+  });
+  it('posts a secret for user', async () => {
+    const [agent] = await regiAndLogin();
+    const postSecret = await agent.post('/api/v1/users/secrets').send(falseSecret);
+    expect(postSecret.body).toEqual({
+      message: 'Got a Secret, Can you Keept it?'
     });
   });
 
