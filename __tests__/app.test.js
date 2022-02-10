@@ -76,7 +76,9 @@ describe('backend routes', () => {
     const [agent] = await regiAndLogin();
     const postSecret = await agent.post('/api/v1/users/secrets').send(falseSecret);
     expect(postSecret.body).toEqual({
-      message: 'Got a Secret, Can you Keept it?'
+      title: 'Great Question of Life, the Universe and Everything ',
+      description: 'Forty-Two',
+      createdAt: '1200'
     });
   });
 
