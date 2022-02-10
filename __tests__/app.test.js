@@ -3,6 +3,7 @@ const setup = require('../data/setup');
 const request = require('supertest');
 const app = require('../lib/app');
 const UserService = require('../lib/services/userServices');
+const Secret = require('../lib/models/Secret');
 
 //need to import UserService
 //need to create dummy user
@@ -23,11 +24,15 @@ const regiAndLogin = async (userProps = {}) => {
   //from UserServices, we will create the mockuser and userprops, deconstruct it and spread it
   const agent = request.agent(app);
   const user = await UserService.create({ ...mockUser, ...userProps });
+  const confidential = await UserService.createSecret({ ...falseSecret, ...userProps });
 
   //we deconstructed the email off of our mockUser and userProps, now we will pass it in the agent and get the email and pass
   const { email } = user;
   await agent.post('/api/v1/users/sessions').send({ email, password });
-  return [agent, user];
+
+  const { title, description, createdAt } = confidential;
+  await agent.post('api/v1/users/secrets'). send({ title, description, createdAt });
+  return [agent, user, confidential];
 };
 
 describe('backend routes', () => {
@@ -59,12 +64,13 @@ describe('backend routes', () => {
     });
   });
 
-  it('gets secrets for logged in user', async () => {
-    const [agent, user] = await regiAndLogin();
+  it.only('gets secrets for logged in user', async () => {
+    const [agent, user, secrets] = await regiAndLogin();
     const secret = await agent.get('/api/v1/users/secrets');
     expect(secret.body).toEqual(
       {
         ...user,
+        ...secrets,
         // id: user.id,
         // email: user.email,
         exp: expect.any(Number),
@@ -72,7 +78,8 @@ describe('backend routes', () => {
       }
     );
   });
-  it('posts a secret for user', async () => {
+
+  it.skip('posts a secret for user', async () => {
     const [agent] = await regiAndLogin();
     const postSecret = await agent.post('/api/v1/users/secrets').send(falseSecret);
     expect(postSecret.body).toEqual({
