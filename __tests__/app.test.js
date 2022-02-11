@@ -29,8 +29,9 @@ const regiAndLogin = async () => {
   const { email } = user;
   await agent.post('/api/v1/users/sessions').send({ email, password });
 
-  const confidential = await UserService.createSecret({ ...falseSecret });
-
+  //this was the correct way to do it, forgot to feed it email, but already fixed the test to take in the falseSecret directly
+  // const confidential = await UserService.createSecret({ ...falseSecret, userId: user.id, email });
+  const confidential = await UserService.createSecret({ ...falseSecret, userId: user.id });
   return { agent, user, confidential };
 };
 
@@ -64,23 +65,28 @@ describe('backend routes', () => {
   });
 
   it('gets secrets for logged in user', async () => {
-    const { agent, confidential } = await regiAndLogin();
-    const secret = await agent.get('/api/v1/users/secrets');
+    const { agent } = await regiAndLogin();
+    await agent.post('/api/v1/secrets').send(falseSecret);
+    const secret = await agent.get('/api/v1/secrets');
     expect(secret.body).toEqual(
       [{
-        ...confidential,
-        createdAt: expect.any(String)
+        secretId: expect.any(String),
+        ...falseSecret,
+        createdAt: expect.any(String),
+        userId: expect.any(String),
       }]
     );
   });
 
-  it.skip('posts a secret for user', async () => {
+  it('posts a secret for user', async () => {
     const { agent } = await regiAndLogin();
-    const postSecret = await agent.post('/api/v1/users/secrets').send(falseSecret);
+    const postSecret = await agent.post('/api/v1/secrets').send(falseSecret);
     expect(postSecret.body).toEqual({
+      secretId: expect.any(String),
       title: 'Great Question of Life, the Universe and Everything ',
       description: 'Forty-Two',
-      createdAt: expect.any(String)
+      createdAt: expect.any(String),
+      userId: expect.any(String),
     });
   });
 
