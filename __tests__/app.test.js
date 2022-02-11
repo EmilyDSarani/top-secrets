@@ -84,12 +84,9 @@ describe('backend routes', () => {
     });
   });
 
-  it.skip('show 401 when signed out', async () => {
-    const res = await request(app).get('/api/v1/users');
-
-    expect(res.body).toEqual({
-      message: 'Please sign in to view content',
-      status: 401,
-    });
+  it('show signed out message', async () => {
+    const { agent } = await regiAndLogin();
+    const res = await agent.delete('/api/v1/users/sessions');
+    expect(res.body.message).toEqual('Signed out!');
   });
 });
