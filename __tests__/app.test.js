@@ -2,12 +2,8 @@ const pool = require('../lib/utils/pool');
 const setup = require('../data/setup');
 const request = require('supertest');
 const app = require('../lib/app');
-const UserService = require('../lib/services/userServices');
+const UserService = require('../lib/services/UserServices');
 
-
-//need to import UserService
-//need to create dummy user
-//need to look at notes as to how to do the user and agent stuff
 const mockUser = {
   email: 'this@email.com',
   password: 'iswhack1234'
