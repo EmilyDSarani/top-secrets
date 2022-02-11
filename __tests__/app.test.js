@@ -15,24 +15,23 @@ const mockUser = {
 const falseSecret = {
   title: 'Great Question of Life, the Universe and Everything ',
   description: 'Forty-Two',
-  createdAt: '1200'
 };
 // we set userProps to be an empty object becayse that is what we expect to see 
-const regiAndLogin = async (userProps = {}) => {
+const regiAndLogin = async () => {
   //then we are saying return the mockUser when the userProps is null
-  const password = userProps.password ?? mockUser.password;
+  const password = mockUser.password;
   //from UserServices, we will create the mockuser and userprops, deconstruct it and spread it
+  //agent holds cookies, request does not
   const agent = request.agent(app);
-  const user = await UserService.create({ ...mockUser, ...userProps });
-  const confidential = await UserService.createSecret({ ...falseSecret, ...userProps });
+  const user = await UserService.create({ ...mockUser });
 
   //we deconstructed the email off of our mockUser and userProps, now we will pass it in the agent and get the email and pass
   const { email } = user;
   await agent.post('/api/v1/users/sessions').send({ email, password });
 
-  const { title, description, createdAt } = confidential;
-  await agent.post('api/v1/users/secrets'). send({ title, description, createdAt });
-  return [agent, user, confidential];
+  const confidential = await UserService.createSecret({ ...falseSecret });
+
+  return { agent, user, confidential };
 };
 
 describe('backend routes', () => {
@@ -56,7 +55,7 @@ describe('backend routes', () => {
   //login user 
   it('logs in a user', async () => {
     //pop out the agent
-    const [agent] = await regiAndLogin();
+    const { agent } = await regiAndLogin();
     const sessions = await agent.post('/api/v1/users/sessions').send(mockUser);
 
     expect(sessions.body).toEqual({
@@ -64,28 +63,33 @@ describe('backend routes', () => {
     });
   });
 
-  it.only('gets secrets for logged in user', async () => {
-    const [agent, user, secrets] = await regiAndLogin();
+  it('gets secrets for logged in user', async () => {
+    const { agent, confidential } = await regiAndLogin();
     const secret = await agent.get('/api/v1/users/secrets');
     expect(secret.body).toEqual(
-      {
-        ...user,
-        ...secrets,
-        // id: user.id,
-        // email: user.email,
-        exp: expect.any(Number),
-        iat: expect.any(Number),
-      }
+      [{
+        ...confidential,
+        createdAt: expect.any(String)
+      }]
     );
   });
 
   it.skip('posts a secret for user', async () => {
-    const [agent] = await regiAndLogin();
+    const { agent } = await regiAndLogin();
     const postSecret = await agent.post('/api/v1/users/secrets').send(falseSecret);
     expect(postSecret.body).toEqual({
       title: 'Great Question of Life, the Universe and Everything ',
       description: 'Forty-Two',
-      createdAt: '1200'
+      createdAt: expect.any(String)
+    });
+  });
+  
+  it('should return a 401 when signed out and listing all users', async () => {
+    const res = await request(app).get('/api/v1/users');
+
+    expect(res.body).toEqual({
+      message: 'You must be signed in to continue',
+      status: 401,
     });
   });
 
